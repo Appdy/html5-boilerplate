@@ -9,9 +9,8 @@
     "HTML5",
     "javascript",
     "html5 template",
-    "html template",
     "minified",
-    "uglified"
+    "minimal"
   ],
   "repository": "github:Appdy/html5-boilerplate",
   "scripts": {
