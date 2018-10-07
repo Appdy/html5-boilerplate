@@ -1,28 +1,22 @@
 {
   "name": "html5-boilerplate",
-  "version": "6.1.0",
+  "version": "6.2.0",
   "description": "A professional front-end template for building fast, robust, and adaptable web apps or sites.",
-  "homepage": "https://html5boilerplate.com/",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Appdy/html5-boilerplate.git"
-  },
+  "author": "Adam Faryna (appdy.co.uk)",
+  "homepage": "https://github.com/Appdy/html5-boilerplate#readme",
+  "keywords": [
+    "HTML5",
+    "javascript",
+    "html5 template",
+    "html template",
+    "minified",
+    "uglified"
+  ],
+  "repository": "github:Appdy/html5-boilerplate",
   "scripts": {
     "build": "gulp build",
     "test": "gulp archive && mocha --require babel-core/register --reporter spec --timeout 5000"
-  },
-  "files": [
-    "CHANGELOG.md",
-    "LICENSE.txt",
-    "package.json",
-    "dist/",
-    "modernizr-config.json",
-    "README.md"
-  ],
-  "engines": {
-    "node": ">=6",
-    "npm": ">=3"
   },
   "babel": {
     "presets": [
