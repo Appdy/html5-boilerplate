@@ -16,12 +16,38 @@ import glob from 'glob';
 import del from 'del';
 import ssri from 'ssri';
 import modernizr from 'modernizr';
+import strip from 'gulp-strip-comments'
 
 import pkg from './package.json';
 import modernizrConfig from './modernizr-config.json';
 
+const AUTOPREFIXER_BROWSERS = [
+  'ie >= 10',
+  'ie_mob >= 10',
+  'ff >= 30',
+  'chrome >= 34',
+  'safari >= 7',
+  'opera >= 23',
+  'ios >= 7',
+  'android >= 4.4',
+  'bb >= 10'
+];
 
 const dirs = pkg['h5bp-configs'].directories;
+
+const input = {
+  style: './src/style/style.scss',
+  js: './src/js/**/*.js',
+  html: './src/index.html'
+}
+
+const output = {
+  style: './dist/css',
+  js: './dist/js',
+  html: './dist'
+}
+
+let isDevelMode = true
 
 // ---------------------------------------------------------------------
 // | Helper tasks                                                      |
@@ -32,7 +58,6 @@ gulp.task('archive:create_archive_dir', () => {
 });
 
 gulp.task('archive:zip', (done) => {
-
   const archiveName = path.resolve(dirs.archive, `${pkg.name}_v${pkg.version}.zip`);
   const zip = archiver('zip');
   const files = glob.sync('**/*.*', {
@@ -49,7 +74,6 @@ gulp.task('archive:zip', (done) => {
   output.on('close', done);
 
   files.forEach((file) => {
-
     const filePath = path.resolve(dirs.dist, file);
 
     // `zip.bulk` does not maintain the file
@@ -58,12 +82,10 @@ gulp.task('archive:zip', (done) => {
       'name': file,
       'mode': fs.statSync(filePath).mode
     });
-
   });
 
   zip.pipe(output);
   zip.finalize();
-
 });
 
 gulp.task('clean', (done) => {
@@ -77,11 +99,11 @@ gulp.task('clean', (done) => {
 
 gulp.task('copy', [
   'copy:.htaccess',
-  'copy:index.html',
+  // 'copy:index.html',
   'copy:jquery',
-  'copy:license',
-  'copy:main.css',
-  'copy:misc',
+  // 'copy:license',
+  // 'copy:main.css',
+  // 'copy:misc',
   'copy:normalize'
 ]);
 
@@ -91,87 +113,155 @@ gulp.task('copy:.htaccess', () =>
     .pipe(gulp.dest(dirs.dist))
 );
 
-gulp.task('copy:index.html', () => {
-  const hash = ssri.fromData(
-    fs.readFileSync('node_modules/jquery/dist/jquery.min.js'),
-    {algorithms: ['sha256']}
-  );
-  let version = pkg.devDependencies.jquery;
-  let modernizrVersion = pkg.devDependencies.modernizr;
-
-  gulp.src(`${dirs.src}/index.html`)
-    .pipe(plugins().replace(/{{JQUERY_VERSION}}/g, version))
-    .pipe(plugins().replace(/{{MODERNIZR_VERSION}}/g, modernizrVersion))
-    .pipe(plugins().replace(/{{JQUERY_SRI_HASH}}/g, hash.toString()))
-    .pipe(gulp.dest(dirs.dist));
-});
-
 gulp.task('copy:jquery', () =>
   gulp.src(['node_modules/jquery/dist/jquery.min.js'])
     .pipe(plugins().rename(`jquery-${pkg.devDependencies.jquery}.min.js`))
     .pipe(gulp.dest(`${dirs.dist}/js/vendor`))
 );
 
-gulp.task('copy:license', () =>
-  gulp.src('LICENSE.txt')
-    .pipe(gulp.dest(dirs.dist))
-);
+// gulp.task('copy:license', () =>
+//   gulp.src('LICENSE.txt')
+//     .pipe(gulp.dest(dirs.dist))
+// );
 
-gulp.task('copy:main.css', () => {
+// gulp.task('copy:main.css', () => {
+//   // const banner = `/*! HTML5 Boilerplate v${pkg.version} | ${pkg.license} License | ${pkg.homepage} */\n\n`;
 
-  const banner = `/*! HTML5 Boilerplate v${pkg.version} | ${pkg.license} License | ${pkg.homepage} */\n\n`;
+//   gulp.src(`${dirs.src}/css/main.css`)
+//     // .pipe(plugins().header(banner))
+//     // .pipe(plugins().autoprefixer({
+//     //   browsers: ['last 2 versions', 'ie >= 9', '> 1%'],
+//     //   cascade: false
+//     // }))
+//     .pipe(gulp.dest(`${dirs.dist}/css`));
+// });
 
-  gulp.src(`${dirs.src}/css/main.css`)
-    .pipe(plugins().header(banner))
-    .pipe(plugins().autoprefixer({
-      browsers: ['last 2 versions', 'ie >= 9', '> 1%'],
-      cascade: false
-    }))
-    .pipe(gulp.dest(`${dirs.dist}/css`));
-});
+// gulp.task('copy:misc', () =>
+//   gulp.src([
 
-gulp.task('copy:misc', () =>
-  gulp.src([
+//     // Copy all files
+//     `${dirs.src}`,
 
-    // Copy all files
-    `${dirs.src}/**/*`,
+//     // Exclude the following files
+//     // (other tasks will handle the copying of these files)
+//     `!${dirs.src}/css/main.css`,
+//     `!${dirs.src}/index.html`
 
-    // Exclude the following files
-    // (other tasks will handle the copying of these files)
-    `!${dirs.src}/css/main.css`,
-    `!${dirs.src}/index.html`
+//   ], {
 
-  ], {
+//     // Include hidden files by default
+//     dot: true
 
-    // Include hidden files by default
-    dot: true
-
-  }).pipe(gulp.dest(dirs.dist))
-);
+//   }).pipe(gulp.dest(dirs.dist))
+// );
 
 gulp.task('copy:normalize', () =>
   gulp.src('node_modules/normalize.css/normalize.css')
     .pipe(gulp.dest(`${dirs.dist}/css`))
 );
 
-gulp.task('modernizr', (done) =>{
+gulp.task('copy:js', () => {
+  return gulp.src(files.js).pipe(gulp.dest())
+})
 
+gulp.task('modernizr', (done) =>{
   modernizr.build(modernizrConfig, (code) => {
     fs.writeFile(`${dirs.dist}/js/vendor/modernizr-${pkg.devDependencies.modernizr}.min.js`, code, done);
   });
-
 });
 
 gulp.task('lint:js', () =>
   gulp.src([
     'gulpfile.js',
-    `${dirs.src}/js/*.js`,
+    input.js,
     `${dirs.test}/*.js`
   ]).pipe(plugins().jscs())
     .pipe(plugins().eslint())
     .pipe(plugins().eslint.failOnError())
 );
 
+gulp.task('process:style', done => {
+  let result = gulp.src(input.style)
+    .pipe(plugins().sass().on('error', plugins().sass.logError))
+    .pipe(plugins().autoprefixer({
+      browsers: AUTOPREFIXER_BROWSERS,
+      cascade: true
+    }))
+
+  if (!isDevelMode) {
+    result = result
+      .pipe(strip())
+      .pipe(plugins().csso())
+  }
+
+  return result.pipe(gulp.dest(output.style))
+});
+
+gulp.task('process:js', done => {
+  let result = gulp.src(input.js)
+
+  if (!isDevelMode) {
+    result = result
+      .pipe(strip())
+      .pipe(plugins().uglify())
+  }
+
+  return result.pipe(gulp.dest(output.js))
+})
+
+gulp.task('process:html', done => {
+  const hash = ssri.fromData(
+    fs.readFileSync('node_modules/jquery/dist/jquery.min.js'),
+    {algorithms: ['sha256']}
+  );
+  const version = pkg.devDependencies.jquery;
+  const modernizrVersion = pkg.devDependencies.modernizr;
+
+  let result = gulp.src(input.html)
+    .pipe(plugins().replace(/{{JQUERY_VERSION}}/g, version))
+    .pipe(plugins().replace(/{{MODERNIZR_VERSION}}/g, modernizrVersion))
+    .pipe(plugins().replace(/{{JQUERY_SRI_HASH}}/g, hash.toString()))
+
+  if (!isDevelMode) {
+    result = result.pipe(plugins().htmlmin({
+      collapseWhitespace: true,
+      removeComments: true
+    }))
+  }
+
+  return result.pipe(gulp.dest(output.html))
+})
+
+gulp.task('process', [
+  'process:style',
+  'process:js',
+  'process:html'
+])
+
+gulp.task('watch', [
+  'watch:style',
+  'watch:js'
+])
+
+gulp.task('watch:style', () => {
+  gulp.watch(input.style, ['process:style'])
+})
+
+gulp.task('watch:js', () => {
+  gulp.watch(input.js, ['process:js', 'lint:js'])
+})
+
+gulp.task('watch:html', () => {
+  gulp.watch(input.html, ['process:html'])
+})
+
+gulp.task('mode:prod', () => {
+  isDevelMode = false
+})
+
+gulp.task('mode:devel', () => {
+  isDevelMode = true
+})
 
 // ---------------------------------------------------------------------
 // | Main tasks                                                        |
@@ -185,11 +275,20 @@ gulp.task('archive', (done) => {
     done);
 });
 
-gulp.task('build', (done) => {
+gulp.task('devel', done => {
   runSequence(
+    'mode:devel',
     ['clean', 'lint:js'],
-    'copy', 'modernizr',
+    'process', 'copy', 'modernizr',
+    'watch', done)
+})
+
+gulp.task('prod', (done) => {
+  runSequence(
+    'mode:prod',
+    ['clean', 'lint:js'],
+    'process', 'copy', 'modernizr',
     done);
 });
 
-gulp.task('default', ['build']);
+gulp.task('default', ['devel']);
