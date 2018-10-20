@@ -25,9 +25,9 @@
   "h5bp-configs": {
     "directories": {
       "archive": "archive",
-      "dist": "dist",
-      "src": "src",
-      "test": "test"
+      "dist": "./dist",
+      "src": "./src",
+      "test": "./test"
     }
   },
   "devDependencies": {
@@ -37,6 +37,7 @@
     "babel-core": "^6.26.3",
     "babel-preset-env": "^1.7.0",
     "babel-register": "^6.26.0",
+    "browser-sync": "^2.26.3",
     "del": "^3.0.0",
     "eslint": "^5.6.0",
     "eslint-config-recommended": "^3.0.0",
@@ -58,6 +59,7 @@
     "jquery": "3.3.1",
     "mocha": "^5.2.0",
     "modernizr": "3.6.0",
+    "normalize-scss": "^7.0.1",
     "normalize.css": "8.0.0",
     "run-sequence": "^2.2.1",
     "ssri": "^6.0.1",

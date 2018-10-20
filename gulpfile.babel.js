@@ -20,6 +20,9 @@ import strip from 'gulp-strip-comments'
 
 import pkg from './package.json';
 import modernizrConfig from './modernizr-config.json';
+import browserSyncBuilder from "browser-sync"
+
+const browserSync = browserSyncBuilder.create();
 
 const AUTOPREFIXER_BROWSERS = [
   'ie >= 10',
@@ -36,7 +39,7 @@ const AUTOPREFIXER_BROWSERS = [
 const dirs = pkg['h5bp-configs'].directories;
 
 const input = {
-  style: './src/style/style.scss',
+  style: './src/style/**/*.scss',
   js: './src/js/**/*.js',
   html: './src/index.html'
 }
@@ -100,11 +103,11 @@ gulp.task('clean', (done) => {
 gulp.task('copy', [
   'copy:.htaccess',
   // 'copy:index.html',
-  'copy:jquery',
+  // 'copy:jquery',
   // 'copy:license',
   // 'copy:main.css',
   // 'copy:misc',
-  'copy:normalize'
+  // 'copy:normalize'
 ]);
 
 gulp.task('copy:.htaccess', () =>
@@ -166,9 +169,62 @@ gulp.task('copy:js', () => {
 
 gulp.task('modernizr', (done) =>{
   modernizr.build(modernizrConfig, (code) => {
-    fs.writeFile(`${dirs.dist}/js/vendor/modernizr-${pkg.devDependencies.modernizr}.min.js`, code, done);
+    const dir = `${dirs.dist}/js/vendor`
+
+    if (!fs.existsSync(dir)){
+      fs.mkdirSync(dir);
+    }
+
+    fs.writeFile(`${dir}/modernizr-${pkg.devDependencies.modernizr}.min.js`, code, done);
   });
 });
+
+gulp.task("browser-sync", () => {
+  browserSync.init({
+    open: "local",
+    browser: "google chrome",
+    reloadOnRestart: true,
+    files: [ output.style, output.js, output.html ],
+    https: false,
+    // httpModule: "http2",
+    watch: true,
+    watchOptions: {
+      ignoreInitial: true,
+      ignored: [ "*.txt", "*.map.css" ]
+    },
+    server: {
+      baseDir: "./dist",
+      // directory: true,
+      // index: "./dist/index.html"
+    },
+    logLevel: "debug", // debug || info || silent
+    logPrefix: "log: ",
+    logConnections: false,
+    logFileChanges: true,
+    tunnel: false,
+    online: false,
+    notify: false,
+    scrollProportionally: false,
+    reloadDelay: 500,
+    reloadDebounce: 0,
+    injectChanges: true,
+    minify: false,
+    localOnly: true,
+    codeSync: true,
+    // proxy: {
+    //   target: "localhost:8080",
+    //   ws: true // enables websockets
+    // },
+    // ghostMode: {
+    //   clicks: true,
+    //   forms: true,
+    //   scroll: false
+    // }
+
+  })
+
+  // gulp.watch("dist/index.html").on('change', browserSync.reload)
+})
 
 gulp.task('lint:js', () =>
   gulp.src([
@@ -181,6 +237,7 @@ gulp.task('lint:js', () =>
 );
 
 gulp.task('process:style', done => {
+  console.log("--- process:style")
   let result = gulp.src(input.style)
     .pipe(plugins().sass().on('error', plugins().sass.logError))
     .pipe(plugins().autoprefixer({
@@ -192,12 +249,15 @@ gulp.task('process:style', done => {
     result = result
       .pipe(strip())
       .pipe(plugins().csso())
+      // .pipe(browserSync.stream())
+      // .pipe(browserSync.reload({stream: true}))
   }
 
   return result.pipe(gulp.dest(output.style))
 });
 
 gulp.task('process:js', done => {
+  console.log("--- process:js")
   let result = gulp.src(input.js)
 
   if (!isDevelMode) {
@@ -210,17 +270,19 @@ gulp.task('process:js', done => {
 })
 
 gulp.task('process:html', done => {
-  const hash = ssri.fromData(
-    fs.readFileSync('node_modules/jquery/dist/jquery.min.js'),
-    {algorithms: ['sha256']}
-  );
+  console.log("--- process:html")
+
+  // const hash = ssri.fromData(
+  //   fs.readFileSync('node_modules/jquery/dist/jquery.min.js'),
+  //   {algorithms: ['sha256']}
+  // );
   const version = pkg.devDependencies.jquery;
   const modernizrVersion = pkg.devDependencies.modernizr;
 
   let result = gulp.src(input.html)
-    .pipe(plugins().replace(/{{JQUERY_VERSION}}/g, version))
+    // .pipe(plugins().replace(/{{JQUERY_VERSION}}/g, version))
     .pipe(plugins().replace(/{{MODERNIZR_VERSION}}/g, modernizrVersion))
-    .pipe(plugins().replace(/{{JQUERY_SRI_HASH}}/g, hash.toString()))
+    // .pipe(plugins().replace(/{{JQUERY_SRI_HASH}}/g, hash.toString()))
 
   if (!isDevelMode) {
     result = result.pipe(plugins().htmlmin({
@@ -240,7 +302,8 @@ gulp.task('process', [
 
 gulp.task('watch', [
   'watch:style',
-  'watch:js'
+  'watch:js',
+  'watch:html'
 ])
 
 gulp.task('watch:style', () => {
@@ -279,15 +342,20 @@ gulp.task('devel', done => {
   runSequence(
     'mode:devel',
     ['clean', 'lint:js'],
-    'process', 'copy', 'modernizr',
-    'watch', done)
+    'process',
+    // 'copy',
+    'modernizr',
+    'watch',
+    'browser-sync', done)
 })
 
 gulp.task('prod', (done) => {
   runSequence(
     'mode:prod',
     ['clean', 'lint:js'],
-    'process', 'copy', 'modernizr',
+    'process',
+    // 'copy',
+    'modernizr',
     done);
 });
 
