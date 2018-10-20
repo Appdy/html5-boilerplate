@@ -21,6 +21,7 @@ import strip from 'gulp-strip-comments'
 import pkg from './package.json';
 import modernizrConfig from './modernizr-config.json';
 import browserSyncBuilder from "browser-sync"
+import prettify from 'gulp-html-prettify'
 
 const browserSync = browserSyncBuilder.create();
 
@@ -41,7 +42,8 @@ const dirs = pkg['h5bp-configs'].directories;
 const input = {
   style: './src/style/**/*.scss',
   js: './src/js/**/*.js',
-  html: './src/index.html'
+  html: './src/index.html',
+  pug: './src/index.pug'
 }
 
 const output = {
@@ -237,7 +239,6 @@ gulp.task('lint:js', () =>
 );
 
 gulp.task('process:style', done => {
-  console.log("--- process:style")
   let result = gulp.src(input.style)
     .pipe(plugins().sass().on('error', plugins().sass.logError))
     .pipe(plugins().autoprefixer({
@@ -257,7 +258,6 @@ gulp.task('process:style', done => {
 });
 
 gulp.task('process:js', done => {
-  console.log("--- process:js")
   let result = gulp.src(input.js)
 
   if (!isDevelMode) {
@@ -270,13 +270,11 @@ gulp.task('process:js', done => {
 })
 
 gulp.task('process:html', done => {
-  console.log("--- process:html")
-
   // const hash = ssri.fromData(
   //   fs.readFileSync('node_modules/jquery/dist/jquery.min.js'),
   //   {algorithms: ['sha256']}
   // );
-  const version = pkg.devDependencies.jquery;
+  // const version = pkg.devDependencies.jquery;
   const modernizrVersion = pkg.devDependencies.modernizr;
 
   let result = gulp.src(input.html)
@@ -294,16 +292,38 @@ gulp.task('process:html', done => {
   return result.pipe(gulp.dest(output.html))
 })
 
+gulp.task('process:pug', done => {
+  const modernizrVersion = pkg.devDependencies.modernizr;
+
+  let result = gulp.src(input.pug)
+      .pipe(plugins().pug())
+      .pipe(plugins().replace(/{{MODERNIZR_VERSION}}/g, modernizrVersion))
+
+  if (isDevelMode) {
+    result = result.pipe(prettify({indent_char: ' ', indent_size: 2}))
+
+  } else {
+    result = result.pipe(plugins().htmlmin({
+      collapseWhitespace: true,
+      removeComments: true
+    }))
+  }
+
+  return result.pipe(gulp.dest(output.html))
+})
+
 gulp.task('process', [
   'process:style',
   'process:js',
-  'process:html'
+  'process:pug'
+  // 'process:html'
 ])
 
 gulp.task('watch', [
   'watch:style',
   'watch:js',
-  'watch:html'
+  'watch:pug'
+  // 'watch:html'
 ])
 
 gulp.task('watch:style', () => {
@@ -316,6 +336,10 @@ gulp.task('watch:js', () => {
 
 gulp.task('watch:html', () => {
   gulp.watch(input.html, ['process:html'])
+})
+
+gulp.task('watch:pug', () => {
+  gulp.watch(input.pug, ['process:pug'])
 })
 
 gulp.task('mode:prod', () => {
