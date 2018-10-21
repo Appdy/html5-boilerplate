@@ -23,6 +23,8 @@ import modernizrConfig from './modernizr-config.json';
 import browserSyncBuilder from "browser-sync"
 import prettify from 'gulp-html-prettify'
 
+const USE_HTML = false
+
 const browserSync = browserSyncBuilder.create();
 
 const AUTOPREFIXER_BROWSERS = [
@@ -315,15 +317,13 @@ gulp.task('process:pug', done => {
 gulp.task('process', [
   'process:style',
   'process:js',
-  'process:pug'
-  // 'process:html'
+  USE_HTML ? 'process:html' : 'process:pug'
 ])
 
 gulp.task('watch', [
   'watch:style',
   'watch:js',
-  'watch:pug'
-  // 'watch:html'
+  USE_HTML ? 'watch:html' : 'watch:pug'
 ])
 
 gulp.task('watch:style', () => {
