@@ -42,16 +42,21 @@ const AUTOPREFIXER_BROWSERS = [
 const dirs = pkg['h5bp-configs'].directories;
 
 const input = {
-  style: './src/style/**/*.scss',
+  style: './src/style/style.scss',
+  styles: './src/style/**/*.scss',
   js: './src/js/**/*.js',
   html: './src/index.html',
-  pug: './src/index.pug'
+  pug: './src/index.pug',
+  fonts: './src/fonts/**',
+  imgs: './src/img/**'
 }
 
 const output = {
   style: './dist/css',
   js: './dist/js',
-  html: './dist'
+  html: './dist',
+  imgs: './dist/',
+  fonts: './dist/'
 }
 
 let isDevelMode = true
@@ -314,7 +319,22 @@ gulp.task('process:pug', done => {
   return result.pipe(gulp.dest(output.html))
 })
 
+gulp.task('copy:imgs', () => {
+  return gulp.src(input.imgs, { base: "./src"})
+    .pipe(gulp.dest(output.imgs))
+})
+
+gulp.task('copy:fonts', () => {
+  return gulp.src(input.fonts, { base: "./src"})
+    .pipe(gulp.dest(output.fonts))
+})
+
+gulp.task('process:imgs', ['copy:imgs'])
+gulp.task('process:fonts', ['copy:fonts'])
+
 gulp.task('process', [
+  'process:imgs',
+  'process:fonts',
   'process:style',
   'process:js',
   USE_HTML ? 'process:html' : 'process:pug'
@@ -323,6 +343,7 @@ gulp.task('process', [
 gulp.task('watch', [
   'watch:style',
   'watch:js',
+  'watch:assets',
   USE_HTML ? 'watch:html' : 'watch:pug'
 ])
 
@@ -340,6 +361,11 @@ gulp.task('watch:html', () => {
 
 gulp.task('watch:pug', () => {
   gulp.watch(input.pug, ['process:pug'])
+})
+
+gulp.task('watch:assets', () => {
+  gulp.watch(input.imgs, ['process:imgs'])
+  gulp.watch(input.fonts, ['process:fonts'])
 })
 
 gulp.task('mode:prod', () => {

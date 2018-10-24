@@ -1,1 +1,2 @@
-var pom="aaa";console.log(pom);
+var pom = 'aaa'
+console.log(pom)
