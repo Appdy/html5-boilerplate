@@ -2,7 +2,7 @@ doctype html
 html(class="no-js" lang="")
 
 head
-  title title
+  title TITLE
   meta(charset="utf-8")
   meta(http-equiv="x-ua-compatible" content="ie=edge")
   meta(name="description" content="")
@@ -13,13 +13,32 @@ head
   <!-- Place favicon.ico in the root directory -->
   link(rel="stylesheet" href="css/style.css")
 
-body
+body.theme-devel
   <!--[if lte IE 9]>
     p(class="browserupgrade") You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.
   <![endif]-->
 
-  <!-- Add your site or application content here -->
-  p Hello world! This is HTML5 Boilerplate.
+  //- CONTAINER
+  #container
+    //- HEADER
+    #header
+      #logo LOGO
+      #top_info TOP INFO
+      #navbar
+        ul
+          li: a(href="#") home
+          li: a(href="#") about
+    //- CONTENT AREA
+    #content_area
+      #banner BANNER
+      #left_col LEFT COL CONTENT
+      #right_col RIGHT COL CONTENT
+    #content
+    //- FOOTER
+    #footer FOOTER
+  </div>
+
+
   script(src="js/vendor/modernizr-{{MODERNIZR_VERSION}}.min.js")
   script(src="js/main.js")
 

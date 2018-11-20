@@ -14,6 +14,7 @@
   ],
   "repository": "github:Appdy/html5-boilerplate",
   "scripts": {
+    "start": "gulp",
     "build": "gulp build",
     "test": "gulp archive && mocha --require babel-core/register --reporter spec --timeout 5000"
   },

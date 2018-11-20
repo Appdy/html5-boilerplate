@@ -203,8 +203,6 @@ gulp.task("browser-sync", () => {
     },
     server: {
       baseDir: "./dist",
-      // directory: true,
-      // index: "./dist/index.html"
     },
     logLevel: "debug", // debug || info || silent
     logPrefix: "log: ",
@@ -229,7 +227,6 @@ gulp.task("browser-sync", () => {
     //   forms: true,
     //   scroll: false
     // }
-
   })
 
   // gulp.watch("dist/index.html").on('change', browserSync.reload)
@@ -277,15 +274,15 @@ gulp.task('process:js', done => {
 })
 
 gulp.task('process:html', done => {
-  // const hash = ssri.fromData(
-  //   fs.readFileSync('node_modules/jquery/dist/jquery.min.js'),
-  //   {algorithms: ['sha256']}
-  // );
-  // const version = pkg.devDependencies.jquery;
+  const hash = ssri.fromData(
+    fs.readFileSync('node_modules/jquery/dist/jquery.min.js'),
+    {algorithms: ['sha256']}
+  );
+  const jQueryVersion = pkg.devDependencies.jquery;
   const modernizrVersion = pkg.devDependencies.modernizr;
 
   let result = gulp.src(input.html)
-    // .pipe(plugins().replace(/{{JQUERY_VERSION}}/g, version))
+    .pipe(plugins().replace(/{{JQUERY_VERSION}}/g, jQueryVersion))
     .pipe(plugins().replace(/{{MODERNIZR_VERSION}}/g, modernizrVersion))
     // .pipe(plugins().replace(/{{JQUERY_SRI_HASH}}/g, hash.toString()))
 
@@ -348,7 +345,7 @@ gulp.task('watch', [
 ])
 
 gulp.task('watch:style', () => {
-  gulp.watch(input.style, ['process:style'])
+  gulp.watch(input.styles, ['process:style'])
 })
 
 gulp.task('watch:js', () => {
